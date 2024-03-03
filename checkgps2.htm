@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Position Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <style>
+        #mapid { height: 400px; }
+    </style>
+</head>
+<body>
+    <h1>GPS Position Tracker</h1>
+    <button id="startButton">Start</button>
+    <button id="stopButton">Stop</button>
+    <p id="currentPosition">Current position will be displayed here...</p>
+    <div id="mapid"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('mapid').setView([0, 0], 2); // Start with a broad view
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var watchID;
+        var marker;
+
+        document.getElementById('startButton').addEventListener('click', function() {
+            if ('geolocation' in navigator) {
+                watchID = navigator.geolocation.watchPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+
+                    if (marker) {
+                        marker.setLatLng([lat, lng]);
+                    } else {
+                        marker = L.marker([lat, lng]).addTo(map);
+                        map.setView([lat, lng], 13);
+                    }
+
+                    document.getElementById('currentPosition').innerHTML = 'Latitude: ' + lat + ', Longitude: ' + lng;
+                }, function(error) {
+                    console.error(error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 5000,
+                    timeout: 27000
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function() {
+            if (watchID !== undefined) {
+                navigator.geolocation.clearWatch(watchID);
+                watchID = undefined; // Ensure we can't clearWatch again until another watchPosition is started
+            }
+        });
+    </script>
+</body>
+</html>
